@@ -1,0 +1,51 @@
+.mainDiv{
+    background-color: rgb(204, 230, 230);
+    border: 1px solid black;
+    
+}
+
+.col{
+   background: rgb(172, 182, 172);
+   /* margin-top: 2PX; */
+   border: 1px solid black;
+   max-width:fit-content;
+   height: fit-content;
+   margin-left: 30px;
+  
+
+}
+
+.unassign{
+    border: 2px solid black;
+    max-width: 200px;
+    float: 10% left;
+    margin-top: 25px;
+    height: 385px;
+    align-items: center;
+    margin-right: 10px;
+}
+.btn{
+    margin-top: 40px;
+}
+.assign{
+    border: 2px solid black;
+    width: 200px;
+    float: right;
+    margin-top: 25px;
+    height: 385px;
+}
+.save{
+float: right;
+margin-right: 50px;
+margin-bottom: 20px;
+
+}
+.list-group:hover{
+    background-color: lightblue;
+}
+.list-group-item:hover{
+    color: brown;
+    cursor: pointer;
+    background: burlywood;
+    
+}

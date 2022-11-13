@@ -1,0 +1,312 @@
+import React,{useState,useEffect} from 'react';
+import axios from 'axios';
+
+import { confirmAlert } from 'react-confirm-alert'; // Import
+import 'react-confirm-alert/src/react-confirm-alert.css'; // import Css
+
+import './user.css';
+
+const User = () => {
+
+const [ArrayOfName,setArrayOfName]=useState([]);            //  this  state is for naming 
+
+const [ArrayOfWork,setArrayOfWork]=useState([]);           //  this state is used for worklist data in which list available.
+
+const [userData, setUserData] = useState([]);             // this state is for assign elements .
+
+const [reallist,setRealList] = useState([]);  //multi          // this state is storing hold origional value of worklist
+
+const [name, setName]=useState('')
+const[assignArr,setAssignArr]=useState([]); //work on handleTask,handleRemove
+const[removeAssignArr, setRemoveAssignArr]=useState([]);//work on handleTask, handleRemove
+const[userDataCopy,setUserDataCopy] = useState([])
+const[whenMultiSelect,setMultiSelect]=useState([]);
+// const[whenMultiSelectUser, setMultiSelectUser]=useState([])
+const[emptyArr,setEmptyArr]=useState([])
+const[edit,setEdit]=useState(false)
+const[isMultiSelect,setIsMultiSelect]=useState(false);
+
+useEffect(()=>{
+    getData()
+    getData1()
+
+},[]);
+
+
+const getData= async()=>{
+    let res = await axios.get('http://localhost:3100/get-data');
+    if(res){
+        setArrayOfName(res.data);
+    }
+    
+  }
+  const getData1= async()=>{
+    let res = await axios.get('http://localhost:3100/get-datawork');
+    if(res){
+      setArrayOfWork(res.data);         // work list
+        setRealList(res.data);   
+        // setRemoveAssignArr(res.data);       // using for hold original state 
+    }
+  }
+
+
+//         --------------------> this is hole save button 
+  const alldata = async(name)=>{
+    let res = await axios.get(`http://localhost:3100/user-data/${name}`);
+    // console.log(res)
+    if(res.data.length!==0){
+    
+
+        let array1=reallist;
+        setUserData(res?.data[0]?.task);
+        // setUserDataCopy(res?.data[0]?.task)
+        let  array2 = res?.data[0]?.task ?? [];
+
+        // console.log(array2,'1')//assigned array
+
+       
+        array1 = array1?.filter(e => !array2?.some(e1 => e1?.work1 === e?.work1))
+        
+      //  console.log(array1,'2');//unassigned array
+       setArrayOfWork(array1);
+       setEdit(true);
+       
+    }else{
+    setEdit(false)
+    setUserData([])
+    }
+  }
+  const handleDD=(e)=>{
+                       getData1();
+                       alldata(e.target.value);
+                       setName(e.target.value)  
+                     }
+ const handleTask=(task,index)=>{
+                             
+                              let userArr = [...assignArr];
+                              let workArr =removeAssignArr.length!==0?[...removeAssignArr]:[...reallist];
+                                   
+                              // console.log(userArr)  
+                              if(isMultiSelect || edit){
+                                let userArr1 = userDataCopy.length!==0?[...userDataCopy]:userArr
+                                let workArr1 = whenMultiSelect.length!==0?[...whenMultiSelect]:workArr
+                                let find = userArr1.find(v=>v.work1===task.work1);
+                                if(!find){
+                                  userArr1.push(task)
+                                }
+                                let findIndex = workArr1.findIndex((v)=>v.work1===task.work1);
+                                if(findIndex>=0){
+                                 workArr1.splice(findIndex,1);
+                                }     
+                                setUserDataCopy(userArr1);
+                                setMultiSelect(workArr1)
+                                setEmptyArr([])
+                              }else{
+                                let fnd = userArr.find(v=>v.work1===task.work1);
+                                if(!fnd){
+                                userArr.push(task) 
+                                }
+                                let findIndex = workArr.findIndex((v)=>v.work1===task.work1);
+                                if(findIndex>=0){
+                                 workArr.splice(findIndex,1);
+                                }    
+                                setAssignArr(userArr);
+                                setRemoveAssignArr(workArr)
+                                setEmptyArr([])
+                              }     
+                              setEmptyArr([])
+
+                             
+           }
+
+      const handleRemove =(task,index)=>{            
+                                      const userArr =assignArr.length!==0?[...assignArr]:[...userData]; 
+                                      if(task.work1!==undefined){ 
+                                      if((edit || isMultiSelect)){
+                                          let userArr1 =userDataCopy.length!==0?[...userDataCopy]: userArr;
+                                          let findIndex = userArr1.findIndex(v=>v.work1===task.work1);
+                                          if(findIndex>=0){
+                                            userArr1.splice(findIndex,1);
+                                            setUserDataCopy(userArr1);
+                                          }
+                                          let workData = [...whenMultiSelect];
+                                          let find = workData.find(v=>v.work1===task.work1);
+                                          if(!find){
+                                            workData.push(task);
+                                            setMultiSelect(workData)
+                                            setEmptyArr(workData)
+                                          }
+
+                                     }else{
+                                      // let workArr = [...removeAssignArr];
+                              let workArr =removeAssignArr.length!==0?[...removeAssignArr]:[...reallist];
+                              let ursArr= assignArr.length!==0?[...assignArr]:userArr;
+                                      let fnd = workArr.find(v=>v.work1===task.work1);
+                                      // console.log(workArr,fnd)
+                                      if(!fnd){
+                                      workArr.push(task)
+                                      setRemoveAssignArr(workArr);
+                                      setEmptyArr(workArr)
+                                      }
+                                      let findIndex = ursArr.findIndex((v)=>v.work1===task.work1);
+                                      if(findIndex>=0){
+                                        ursArr.splice(findIndex,1);
+                                        setAssignArr(ursArr)
+                                      }   
+                                     }
+                                    }
+         }
+// Button add ------------------------------------------------------------------------->>>>>>>>>>>>
+//------------------------------------->  single add-----> 
+//
+const handleAdd=() => { 
+  if(assignArr.length || userDataCopy.length) {
+   
+    if(edit || isMultiSelect){
+      setUserData(userDataCopy);
+      setArrayOfWork(whenMultiSelect)
+    }else{
+      setUserData(assignArr);
+      setArrayOfWork(removeAssignArr); 
+    }
+  } else {
+    alert("please select a data from left list ")
+  }   
+}
+ //------------------------------------->  multi add -------->
+const multAdd=()=>{
+  setUserData(reallist);
+  // setUserDataCopy(reallist)
+  setArrayOfWork([]);
+  setIsMultiSelect(true)
+}
+//-------------------------------------->  single Remove------------->
+const singleRemove = () => {
+    
+    let arr = removeAssignArr.length!==0?removeAssignArr:ArrayOfWork
+if(emptyArr.length){
+    if((edit || isMultiSelect)){
+      setArrayOfWork(whenMultiSelect)
+      setUserData(userDataCopy)
+      
+      console.log('if')
+    }else{
+  setArrayOfWork(arr); 
+  setUserData(assignArr);
+    }
+}
+}
+
+//-------------------------------------->    All delete --------->
+const  allRemove = ()=>{
+     confirmAlert({
+            message: 'Are you sure to remove all works',
+            buttons: [
+                         {
+                            label: 'Yes',
+                            onClick:() => { 
+                                           setUserData([]);
+                                           setArrayOfWork(reallist);
+                                          setIsMultiSelect(false)
+
+                                          }      
+                         },
+                                 {  label: 'No', }
+                     ]
+                      }   );
+                     }
+const saveInToDatabase=async()=>{
+let json = {name:name,task:userData};
+console.log(json);
+if(!edit){
+let res = await axios.post('http://localhost:3100/post-data',json);
+}else{
+let res = await axios.put('http://localhost:3100/update-data',json);
+setEdit(false);
+}
+alert("Your file is being uploaded!")
+}
+  return (
+    <div>
+        <div className='mainDiv'><h3> User Report</h3></div><br/>  
+          <div className='col'>
+              <select  onChange={handleDD} value={name} >
+                     <option > Select Name</option>
+                          {   ArrayOfName && ArrayOfName.map((userName)=>{
+                                   return(
+                                          <>
+                                          <option value={userName.name}>{userName.name}</option>
+                                          </>
+                                        )})
+                          }
+                </select>
+          </div> 
+          <div className="container">
+             <div className="row"> 
+             {/*///////////---------------------------- Unassign department---------------///////////////////// */}
+                   <div className="col-sm">
+                   
+                      <div className='unassign'>
+                        
+                              {  
+                              ArrayOfWork.map((item,index)=>{return (
+                                        <ul className='list-group'>
+                                         
+                                        <li className='list-group-item' 
+                                              id = "worklist"
+                                              style={{backgroundColor:"", caretColor: "rgba(0,0,0,0)"}}  
+                                              onClick={()=>handleTask(item,index)}>{item.work1}
+                                             </li>  
+                                        </ul>
+                                        ) })     
+                                    }
+                       </div>          
+             </div>  
+               {/* //////////////-------------------------button department ----------------////////////////////*/}
+                 <div className="col-sm">
+                    <div className="btn fixed" >
+                    <div>
+                       <button   type="button" 
+                                 className="btn btn-primary btn-sm" 
+                                 onClick={() => handleAdd() } >  Multi Add </button>
+                    </div>
+                     <div>
+                       <button type="button" 
+                               className="btn btn-success btn-sm"
+                               onClick={multAdd} >All Add </button>
+                    </div>   
+                    <div>
+                       <button type="button" 
+                               className="btn btn-secondary btn-sm"  
+                               onClick={singleRemove}> Remove </button>
+                    </div>
+                    <div>
+                       <button type="button" 
+                               className="btn btn-danger btn-sm" 
+                               onClick={allRemove} > All remove </button>
+                    </div>     
+               </div>   
+              </div>
+              {/* /////////////////////////---------------ASSIGN DEPARTMENT ----------------////////////////////// */}
+              <div className="col-sm">
+                   <div className='assign' >
+                              { userData && userData.map((item,index)=>{return (
+                                <ul className='list-group'> 
+                                  <li className='list-group-item' 
+                                      style={{caretColor: "rgba(0,0,0,0)"}} 
+                                      onClick={()=>handleRemove(item,index)} > {item.work1}</li>
+                                        </ul>  ) })
+                              } 
+                         </div></div>   
+           </div>        
+     </div>
+    <div className='save'>
+             <button type="button"  
+                     className="btn btn-success " 
+                     onClick={saveInToDatabase}>{edit?'Edit':'Save'}
+            </button>
+     </div>   
+   </div>
+  )
+}
+export default User;
